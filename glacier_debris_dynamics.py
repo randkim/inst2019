@@ -22,9 +22,7 @@ soil_albedo = 0.17
 solar_constant = 1400
 
 #Lists
-debris_depth = []
-for i in range(0,10):
-    debris_depth.append(i)
+debris_depth = list(range(0, 10))
 
 surface_temp_gradient = []
 bottom_temp_gradient = []
@@ -64,7 +62,7 @@ while ice_temp[-1] <= 273:
     # =============================================================================
     
     #Step 3: Ice temperature increases
-    change_ice_temp = thermal_conductivity_of_rock * (avg_temp_gradient[-1] - ice_temp[-1])/(density_ice * heatcap_ice)
+    change_ice_temp = thermal_conductivity_of_rock * (avg_temp[-1] - ice_temp[-1])/(density_ice * heatcap_ice)
     ice_temp.append(ice_temp[-1] - change_ice_temp)
     
     
@@ -91,8 +89,8 @@ if ice_temp[-1] > 273:
 # =============================================================================
         
         #Step 3: Ice mass loss calculation
-        ice_mass_loss = - thermal_conductivity_of_rock * (avg_temp_gradient[-1] -ice_temp[-1])/latent_fusion
-        ice_mass.append(ice_mass_loss)
+        ice_mass_loss = - thermal_conductivity_of_rock * (avg_temp[-1] -ice_temp[-1])/latent_fusion
+        ice_mass.append(ice_mass + ice_mass_loss)
         
         ice_temp.append(ice_temp[-1])
 
