@@ -64,7 +64,7 @@ while ice_temp[-1] <= 273:
     
     #Step 3: Ice temperature increases
     change_ice_temp = thermal_conductivity_of_rock * (avg_temp[-1] - ice_temp[-1])/(density_ice * heatcap_ice)
-    ice_temp.append(ice_temp[-1] + change_ice_temp) #changed to +
+    ice_temp.append(ice_temp[-1] + change_ice_temp)
     
     
 #Once ice heats up to melting temperature    
