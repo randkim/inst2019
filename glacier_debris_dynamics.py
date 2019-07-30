@@ -6,6 +6,8 @@ import random as rd
 debris_temp_surface = [275]
 debris_temp_btm = [268]
 ice_temp = [265]
+night_temp_min = 265
+night_temp_max = 289
 
 #Constants
 #Heatcap are reduced by a factor of 100 for now to make calculations faster
@@ -33,18 +35,18 @@ air_temp = []
 
 ice_mass = [3.1*10**(-5)]
 
-#to apply day-night cycle
-time = 0
-
 #While ice is below melting temperature
 while ice_temp[-1] <= 273:
-	#Step 1: Solar radiation heats up the top surface of the debris layer
-    if time %% 2 == 0: #day
+    #Step 1: Solar radiation heats up the top surface of the debris layer
+    if len(air_temp)%2 == 0: #day
         change_debris_surface_temp = (1 - soil_albedo) * solar_constant/(density_rock * heatcap_rock)
-	else: #night
-		air_temp.append(rd.randint(-50, 16))
-		change_debris_surface_temp = (air_temp[-1] - debris_temp_surface)/R_rock #negative value
-		
+        air_temp.append(0)
+        #print('day ' + str(change_debris_surface_temp))
+    else: #night
+        air_temp.append(rd.randint(night_temp_min, night_temp_max))
+        change_debris_surface_temp = (air_temp[-1] - debris_temp_surface[-1])/R_rock #negative value
+        #print('night ' + str(change_debris_surface_temp))
+	
     debris_temp_surface.append(debris_temp_surface[-1] + change_debris_surface_temp)
     
     #Step 2: The radiation also heats up the bottom of the debris, but at a factor reduced by the depth of the debris
@@ -72,21 +74,20 @@ while ice_temp[-1] <= 273:
     # =============================================================================
 
     #Step 3: Ice temperature increases
-    change_ice_temp = thermal_conductivity_of_rock * (avg_temp_gradient[-1] - ice_temp[-1])/(density_ice * heatcap_ice)
-    ice_temp.append(ice_temp[-1] - change_ice_temp)
-      
-    #update time
-    time += 1
-
-    
+    change_ice_temp = thermal_conductivity_of_rock * (debris_temp_btm[-1] - ice_temp[-1])/(density_ice * heatcap_ice)
+    ice_temp.append(ice_temp[-1] + change_ice_temp)
+    print(ice_temp[-1])
 #Once ice heats up to melting temperature    
 if ice_temp[-1] > 273:
-    while ice_mass[-1] > 2.8*10**(-5):
-		if time %% 2 == 0: #day
-        	change_debris_surface_temp = (1 - soil_albedo) * solar_constant/(density_rock * heatcap_rock)
-		else: #night
-		air_temp.append(rd.randint(-50, 16))
-		change_debris_surface_temp = (air_temp[-1] - debris_temp_surface)/R_rock #negative value
+    while ice_mass[-1] > 1*10**(-5):
+        if len(air_temp)%2 == 0: #day
+            change_debris_surface_temp = (1 - soil_albedo) * solar_constant/(density_rock * heatcap_rock)
+            air_temp.append(0)
+            print('day ' + str(change_debris_surface_temp))
+        else: #night
+            air_temp.append(night_temp_min, night_temp_max)
+            change_debris_surface_temp = (air_temp[-1]- debris_temp_surface[-1])/R_rock #negative value
+            print('night ' + str(change_debris_surface_temp))
 		
         debris_temp_surface.append(debris_temp_surface[-1] + change_debris_surface_temp)
         
@@ -107,15 +108,11 @@ if ice_temp[-1] > 273:
 # =============================================================================
         
         #Step 3: Ice mass loss calculation
-        ice_mass_loss = - thermal_conductivity_of_rock * (avg_temp_gradient[-1] -ice_temp[-1])/latent_fusion
+        ice_mass_loss = - thermal_conductivity_of_rock * (debris_temp_btm[-1] -ice_temp[-1])/latent_fusion
         ice_mass.append(ice_mass_loss)
         
         ice_temp.append(ice_temp[-1])
-		
-		#update time
-    	time += 1
-
-
+        
 fig, axs = plt.subplots(2,2)
 
 axs[0,0].plot(range(len(ice_mass)),ice_mass)
@@ -128,3 +125,4 @@ axs[1,0].plot(range(len(avg_temp)), avg_temp)
 axs[1,0].set_title("Change in average debris layer temperature per iteration")
 
 #axs[1,1].plot(range(len(surface_temp_gradient)), surface_temp_gradient)
+plt.show()
