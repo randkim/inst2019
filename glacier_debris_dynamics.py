@@ -58,7 +58,6 @@ while ice_temp[-1] <= 273:
 
     #Step 2: Update debris temperatures. The heat at the surface is assumed to transfer as 1/d to the bottom surface.
     debris_temp_surface.append(debris_temp_surface[-1] + change_debris_surface_temp)
-
     debris_temp_btm.append(debris_temp_btm[-1] + change_debris_surface_temp/max(debris_depth))
 
     #Step 3: Two thermal gradients form. One from the updated surface temperature to the bottom, and another from the botton (which is at ice temperature) to the surface. Take the average as the actual gradient.
@@ -93,11 +92,11 @@ if ice_temp[-1] > 273:
     while ice_mass[-1] > 1*10**(-5):
         if len(air_temp)%2 == 0: #day
             change_debris_surface_temp = (1 - soil_albedo) * solar_constant/(density_rock * heatcap_rock)
-            air_temp.append(0)
-            print('day ' + str(change_debris_surface_temp))
+            air_temp.append(273)
         else: #night
             air_temp.append(night_temp_min, night_temp_max)
-            change_debris_surface_temp = (air_temp[-1]- debris_temp_surface[-1])/R_rock #negative value
+            change_debris_surface_temp = heat_transfer_coefficient_air * (air_temp[-1] -debris_temp_surface[-1])
+            #change_debris_surface_temp = (air_temp[-1]- debris_temp_surface[-1])/R_rock #negative value
             print('night ' + str(change_debris_surface_temp))
 
         debris_temp_surface.append(debris_temp_surface[-1] + change_debris_surface_temp)
