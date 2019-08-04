@@ -3,27 +3,29 @@ import matplotlib.pyplot as plt
 import random as rd
 
 #Initial Conditions
-debris_temp_surface = [275]
-debris_temp_btm = [268]
-ice_temp = [265]
-night_temp_min = 265
-night_temp_max = 289
+debris_temp_surface = [278]
+debris_temp_btm = [276]
+ice_temp = [272.995]
+night_temp_min = 260
+night_temp_max = 275
 
 #Constants
-#Heatcap are reduced by a factor of 100 for now to make calculations faster
-density_ice = 2008 #kg/m^3
-heatcap_ice = 0.0053 * 4.184 * 100/10**(2) #Conversion of cal/cm to joules/m
-latent_fusion = 333.55*1000
-density_rock = 2243 #Based on Marl (the rock)
-heatcap_rock = 2000/10**(2)#Average value
+density_ice = 917 #kg/m^3,Cutnell, John D., & Kenneth W. Johnson. Physics, 3rd Edition. New York: Wiley, 1995: 315
+heatcap_ice = 2050 #https://www.engineeringtoolbox.com/ice-thermal-properties-d_576.html
+latent_fusion = 333.55*1000 #https://en.wikipedia.org/wiki/Enthalpy_of_fusion
+density_rock = 2500 #https://www.eoas.ubc.ca/ubcgif/iag/foundations/properties/density.htm
+heatcap_rock = 2000 #https://www.e-education.psu.edu/earth103/node/1005
 
-#Value obtained from https://pubs.usgs.gov/of/1988/0441/report.pdf
-thermal_conductivity_of_rock = 2.390 * 10**(-3) * 4.184 * 100  #Conversion of cal/cm to joules/m
-heat_transfer_coefficient_air = 500 #Between 0.5 to 1000 Wm^(-2)K^(-1)
-heat_transfer_coefficient_water = 1450 #Between 50 to 3,000 Wm^(-2)K^(-1)
+#https://www.engineeringtoolbox.com/thermal-conductivity-d_429.html
+thermal_conductivity_of_rock = 5
+
+#https://www.engineersedge.com/heat_transfer/convective_heat_transfer_coefficients__13378.htm
+heat_transfer_coefficient_air = 26
+heat_transfer_coefficient_water = 260
 
 soil_albedo = 0.17
 solar_constant = 1400
+
 
 #Lists
 debris_depth = list(range(0, 10))
@@ -33,26 +35,23 @@ bottom_temp_gradient = []
 avg_temp_gradient = []
 avg_temp = []
 
-#Day-night cycle
-air_temp = []
 
-ice_mass = [3.1*10**(-5)]
+ice_mass = [-4.525*10**(-5)]
 
 #While ice is below melting temperature, ice first heats up to 273 Kelvin, the melting temperature
 while ice_temp[-1] <= 273:
+    night_solar_constant = rd.randint(-5000, 0)
     #Step 1: Day - Solar radiation heats up the top surface of the debris layer
-    if len(air_temp)%2 == 0: #day
-        air_temp.append(273)
+    if rd.randint(0,10) <= 5: #day
         change_debris_surface_temp = (1 - soil_albedo) * solar_constant/(density_rock * heatcap_rock)
+        print('day0', change_debris_surface_temp)
 
         #print('day ' + str(change_debris_surface_temp))
 
     #Step 1: Night - Air either convects heat to or from the surface of the debris layer
     else: #night
-        air_temp.append(rd.randint(night_temp_min, night_temp_max))
-
-        #Convection between cold air and warmer top of the debris layer
-        change_debris_surface_temp = heat_transfer_coefficient_air * (air_temp[-1] -debris_temp_surface[-1])
+        change_debris_surface_temp = night_solar_constant/(density_rock * heatcap_rock)
+        print('night0', change_debris_surface_temp)
         #change_debris_surface_temp = (air_temp[-1] - debris_temp_surface[-1])/R_rock #negative value
         #print('night ' + str(change_debris_surface_temp))
 
@@ -67,6 +66,8 @@ while ice_temp[-1] <= 273:
 
     for i in range(len(surface_temp_gradient)):
         avg_temp_gradient.append((surface_temp_gradient[i] + bottom_temp_gradient[i])/2)
+
+    hi = change_debris_surface_temp
 
     avg_temp.append(np.average(avg_temp_gradient))
 
@@ -89,18 +90,18 @@ while ice_temp[-1] <= 273:
 
 #Once ice heats up to melting temperature
 if ice_temp[-1] > 273:
-    while ice_mass[-1] > 1*10**(-5):
-        if len(air_temp)%2 == 0: #day
+
+    while np.abs(ice_mass[-1]) < 4.530*10**(-5):
+        night_solar_constant = rd.randint(-1400, 1400)
+        if rd.randint(0,10) <= 5: #day
             change_debris_surface_temp = (1 - soil_albedo) * solar_constant/(density_rock * heatcap_rock)
-            air_temp.append(273)
+            print('day', change_debris_surface_temp)
+
         else: #night
-            air_temp.append(night_temp_min, night_temp_max)
-            change_debris_surface_temp = heat_transfer_coefficient_air * (air_temp[-1] -debris_temp_surface[-1])
-            #change_debris_surface_temp = (air_temp[-1]- debris_temp_surface[-1])/R_rock #negative value
-            print('night ' + str(change_debris_surface_temp))
+            change_debris_surface_temp = night_solar_constant/(density_rock * heatcap_rock)
+            print('night', change_debris_surface_temp)
 
         debris_temp_surface.append(debris_temp_surface[-1] + change_debris_surface_temp)
-
         debris_temp_btm.append(debris_temp_btm[-1] + change_debris_surface_temp/max(debris_depth))
 
         for i in range(len(debris_depth)):
@@ -111,7 +112,6 @@ if ice_temp[-1] > 273:
             avg_temp_gradient.append((surface_temp_gradient[i] + bottom_temp_gradient[i])/2)
 
         avg_temp.append(np.average(avg_temp_gradient))
-
 # =============================================================================
 #             if avg_temp_gradient[i] - surface_temp_gradient[i] != 0:
 #                 print("Hi")
